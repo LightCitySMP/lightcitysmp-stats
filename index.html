@@ -3,9 +3,40 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LightCitySMP Stats</title>
-<link rel="stylesheet" href="style.css">
+<title>Season 4 Stats</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background-color: #0f172a;
+    color: #f8fafc;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+header {
+    margin: 40px 0;
+}
+h1 {
+    color: #22c55e;
+    margin: 0;
+    font-size: 2.5rem;
+}
+.chart-wrapper {
+    width: 90vw;
+    max-width: 900px;
+    background-color: #1e293b;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+canvas {
+    width: 100% !important;
+    height: auto !important;
+}
+</style>
 </head>
 <body>
 <header>
@@ -16,6 +47,76 @@
 <canvas id="playersChart"></canvas>
 </div>
 </main>
-<script src="script.js"></script>
+<script>
+const smpStats = [
+    { day: "Day 1", peak: 30, avg: 20, min: 10 },
+    { day: "Day 2", peak: 20, avg: 15, min: 5 },
+    { day: "Day 3", peak: 45, avg: 30, min: 15 },
+    { day: "Day 4", peak: 50, avg: 35, min: 20 }
+];
+
+const chartLabels = [];
+const peakPlayers = [];
+const avgPlayers = [];
+const minPlayers = [];
+
+for (let i = 0; i < smpStats.length; i++) {
+    chartLabels.push(smpStats[i].day);
+    peakPlayers.push(smpStats[i].peak);
+    avgPlayers.push(smpStats[i].avg);
+    minPlayers.push(smpStats[i].min);
+}
+
+const canvasContext = document.getElementById('playersChart').getContext('2d');
+
+new Chart(canvasContext, {
+    type: 'bar',
+    data: {
+        labels: chartLabels,
+        datasets: [
+            {
+                label: 'Peak Players',
+                data: peakPlayers,
+                backgroundColor: '#16a34a',
+                borderColor: '#15803d',
+                borderWidth: 1
+            },
+            {
+                label: 'Average Players',
+                data: avgPlayers,
+                backgroundColor: '#4ade80',
+                borderColor: '#22c55e',
+                borderWidth: 1
+            },
+            {
+                label: 'Minimum Players',
+                data: minPlayers,
+                backgroundColor: '#bbf7d0',
+                borderColor: '#86efac',
+                borderWidth: 1
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            y: {
+                beginAtZero: true,
+                grid: { color: '#334155' },
+                ticks: { color: '#f8fafc' }
+            },
+            x: {
+                grid: { color: '#334155' },
+                ticks: { color: '#f8fafc' }
+            }
+        },
+        plugins: {
+            legend: {
+                labels: { color: '#f8fafc' }
+            }
+        }
+    }
+});
+</script>
 </body>
 </html>
