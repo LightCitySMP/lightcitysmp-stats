@@ -18,7 +18,7 @@ body {
 }
 
 .container {
-    max-width: 1200px;
+    max-width: 1400px;
     margin: 0 auto;
     padding: 2rem;
 }
@@ -44,7 +44,7 @@ h1 {
 
 .main-grid {
     display: grid;
-    grid-template-columns: 280px 1fr;
+    grid-template-columns: 320px 1fr;
     gap: 1.5rem;
     align-items: start;
 }
@@ -67,7 +67,7 @@ h1 {
 
 .chart-wrapper {
     position: relative;
-    height: 500px;
+    height: 520px;
 }
 
 .config-row {
@@ -142,7 +142,7 @@ h1 {
 
 .stats-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(5, 1fr);
     gap: 1rem;
     margin-bottom: 1.5rem;
 }
@@ -153,6 +153,19 @@ h1 {
     border-radius: 10px;
     padding: 1rem;
     text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.stat-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #22c55e, #3b82f6, #a855f7);
+    opacity: 0.6;
 }
 
 .stat-value {
@@ -169,51 +182,167 @@ h1 {
     letter-spacing: 0.05em;
 }
 
-@media (max-width: 900px) {
+.trend-up { color: #4ade80; }
+.trend-down { color: #f87171; }
+
+.trend-indicator {
+    font-size: 0.7rem;
+    margin-left: 0.25rem;
+}
+
+.config-scroll {
+    max-height: 420px;
+    overflow-y: auto;
+    padding-right: 0.25rem;
+}
+
+.config-scroll::-webkit-scrollbar {
+    width: 6px;
+}
+
+.config-scroll::-webkit-scrollbar-track {
+    background: #0f172a;
+    border-radius: 3px;
+}
+
+.config-scroll::-webkit-scrollbar-thumb {
+    background: #334155;
+    border-radius: 3px;
+}
+
+.config-scroll::-webkit-scrollbar-thumb:hover {
+    background: #475569;
+}
+
+.day-badge {
+    display: inline-block;
+    background: #1e293b;
+    color: #94a3b8;
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    margin-right: 0.25rem;
+}
+
+.chart-toggle {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+}
+
+.toggle-btn {
+    background: #0f172a;
+    border: 1px solid #334155;
+    color: #94a3b8;
+    padding: 0.35rem 0.75rem;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: all 0.2s;
+}
+
+.toggle-btn.active {
+    background: #1e293b;
+    border-color: #4ade80;
+    color: #4ade80;
+}
+
+.toggle-btn:hover {
+    border-color: #64748b;
+    color: #e2e8f0;
+}
+
+.mini-sparkline {
+    height: 40px;
+    margin-top: 0.5rem;
+    opacity: 0.7;
+}
+
+@media (max-width: 1100px) {
     .main-grid {
         grid-template-columns: 1fr;
     }
     .stats-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, 1fr);
     }
     .config-row {
         grid-template-columns: 1fr 1fr;
     }
-    .config-row span { display: none; }
+}
+
+@media (max-width: 600px) {
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+    .container {
+        padding: 1rem;
+    }
 }
 </style>
+<base target="_blank">
 </head>
 <body>
 <div class="container">
     <header>
         <h1>LightCitySMP Statistics</h1>
-        <div class="subtitle">Season 5 Player Activity</div>
+        <div class="subtitle">Season 5 Player Activity Dashboard</div>
     </header>
 
     <div class="stats-grid">
         <div class="stat-card">
             <div class="stat-value" id="totalPeak">0</div>
             <div class="stat-label">Highest Peak</div>
+            <canvas class="mini-sparkline" id="sparkPeak"></canvas>
         </div>
         <div class="stat-card">
             <div class="stat-value" id="totalAvg">0</div>
             <div class="stat-label">Overall Average</div>
+            <canvas class="mini-sparkline" id="sparkAvg"></canvas>
         </div>
         <div class="stat-card">
             <div class="stat-value" id="totalDays">0</div>
             <div class="stat-label">Days Tracked</div>
+            <div style="margin-top:0.5rem; font-size:0.8rem; color:#64748b;">Limit: <span style="color:#4ade80;">50</span></div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" id="totalPlayers">0</div>
+            <div class="stat-label">Total Player-Hours</div>
+            <div style="margin-top:0.5rem; font-size:0.8rem; color:#64748b;">Est. 12h/day</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" id="trendDay">—</div>
+            <div class="stat-label">Latest Trend</div>
+            <div style="margin-top:0.5rem; font-size:0.8rem;" id="trendText"></div>
         </div>
     </div>
 
     <div class="main-grid">
         <div class="panel">
             <h2>Data Config</h2>
-            <div id="configRows"></div>
-            <button class="btn btn-add" onclick="addDay()">+ Add Day</button>
+            <div class="config-scroll">
+                <div id="configRows"></div>
+            </div>
+            <button class="btn btn-add" id="addBtn" onclick="addDay()">+ Add Day</button>
+            <div style="margin-top:0.75rem; display:flex; gap:0.5rem;">
+                <button class="btn" style="flex:1; font-size:0.75rem;" onclick="exportData()">Export JSON</button>
+                <button class="btn" style="flex:1; font-size:0.75rem;" onclick="document.getElementById('importFile').click()">Import JSON</button>
+                <input type="file" id="importFile" style="display:none" accept=".json" onchange="importData(this)">
+            </div>
         </div>
 
-        <div class="panel chart-wrapper">
-            <canvas id="playersChart"></canvas>
+        <div class="panel">
+            <div class="chart-toggle">
+                <button class="toggle-btn active" onclick="setChartType('bar')">Bar</button>
+                <button class="toggle-btn" onclick="setChartType('line')">Line</button>
+                <button class="toggle-btn" onclick="setChartType('mixed')">Mixed</button>
+                <button class="toggle-btn active" onclick="toggleDataset(0)" style="border-color:#22c55e; color:#22c55e;">Peak</button>
+                <button class="toggle-btn active" onclick="toggleDataset(1)" style="border-color:#3b82f6; color:#3b82f6;">Avg</button>
+                <button class="toggle-btn active" onclick="toggleDataset(2)" style="border-color:#64748b; color:#64748b;">Min</button>
+            </div>
+            <div class="chart-wrapper">
+                <canvas id="playersChart"></canvas>
+            </div>
         </div>
     </div>
 </div>
@@ -227,14 +356,17 @@ let smpStats = [
     { day: "Day 5", peak: 22, avg: 16, min: 2 },
     { day: "Day 6", peak: 24, avg: 18, min: 3 },
     { day: "Day 7", peak: 21, avg: 15, min: 2 },
-    { day: "Day 7", peak: 30, avg: 18, min: 6 }
+    { day: "Day 8", peak: 30, avg: 18, min: 6 }
 ];
 
+const MAX_DAYS = 50;
 let chart;
+let currentChartType = 'bar';
+let visibleDatasets = [true, true, true];
 
 function initChart() {
     const ctx = document.getElementById('playersChart').getContext('2d');
-    
+
     chart = new Chart(ctx, {
         type: 'bar',
         data: {
@@ -243,23 +375,32 @@ function initChart() {
                 {
                     label: 'Peak',
                     data: [],
-                    backgroundColor: '#22c55e',
+                    backgroundColor: 'rgba(34, 197, 94, 0.85)',
+                    borderColor: '#22c55e',
+                    borderWidth: 0,
                     borderRadius: 4,
                     borderSkipped: false,
+                    order: 1
                 },
                 {
                     label: 'Average',
                     data: [],
-                    backgroundColor: '#3b82f6',
+                    backgroundColor: 'rgba(59, 130, 246, 0.85)',
+                    borderColor: '#3b82f6',
+                    borderWidth: 0,
                     borderRadius: 4,
                     borderSkipped: false,
+                    order: 2
                 },
                 {
                     label: 'Minimum',
                     data: [],
-                    backgroundColor: '#64748b',
+                    backgroundColor: 'rgba(100, 116, 139, 0.85)',
+                    borderColor: '#64748b',
+                    borderWidth: 0,
                     borderRadius: 4,
                     borderSkipped: false,
+                    order: 3
                 }
             ]
         },
@@ -272,13 +413,7 @@ function initChart() {
             },
             plugins: {
                 legend: {
-                    position: 'top',
-                    labels: {
-                        color: '#94a3b8',
-                        usePointStyle: true,
-                        padding: 20,
-                        font: { size: 12 }
-                    }
+                    display: false
                 },
                 tooltip: {
                     backgroundColor: '#0f172a',
@@ -288,11 +423,20 @@ function initChart() {
                     borderWidth: 1,
                     padding: 12,
                     cornerRadius: 8,
+                    callbacks: {
+                        afterBody: function(context) {
+                            const idx = context[0].dataIndex;
+                            const stat = smpStats[idx];
+                            const range = stat.peak - stat.min;
+                            return `Range: ${range} players`;
+                        }
+                    }
                 }
             },
             scales: {
                 y: {
                     beginAtZero: true,
+                    max: 55,
                     grid: {
                         color: '#1e293b',
                         drawBorder: false,
@@ -300,7 +444,8 @@ function initChart() {
                     ticks: {
                         color: '#64748b',
                         padding: 10,
-                        font: { size: 11 }
+                        font: { size: 11 },
+                        stepSize: 5
                     }
                 },
                 x: {
@@ -309,12 +454,14 @@ function initChart() {
                     },
                     ticks: {
                         color: '#94a3b8',
-                        font: { size: 11 }
+                        font: { size: 11 },
+                        maxRotation: 45,
+                        minRotation: 0
                     }
                 }
             },
             animation: {
-                duration: 600,
+                duration: 500,
                 easing: 'easeOutQuart'
             }
         }
@@ -324,42 +471,57 @@ function initChart() {
 function renderConfig() {
     const container = document.getElementById('configRows');
     container.innerHTML = '';
-    
+
     smpStats.forEach((stat, index) => {
         const row = document.createElement('div');
         row.className = 'config-row';
         row.innerHTML = `
-            <input type="text" value="${stat.day}" onchange="updateStat(${index}, 'day', this.value)" placeholder="Day">
-            <input type="number" value="${stat.peak}" onchange="updateStat(${index}, 'peak', this.value)" placeholder="Peak">
-            <input type="number" value="${stat.avg}" onchange="updateStat(${index}, 'avg', this.value)" placeholder="Avg">
-            <input type="number" value="${stat.min}" onchange="updateStat(${index}, 'min', this.value)" placeholder="Min">
+            <input type="text" value="${stat.day}" onchange="updateStat(${index}, 'day', this.value)" placeholder="Day" title="Day name">
+            <input type="number" value="${stat.peak}" onchange="updateStat(${index}, 'peak', this.value)" placeholder="Peak" min="0" max="50" title="Peak players (max 50)">
+            <input type="number" value="${stat.avg}" onchange="updateStat(${index}, 'avg', this.value)" placeholder="Avg" min="0" max="50" title="Average players">
+            <input type="number" value="${stat.min}" onchange="updateStat(${index}, 'min', this.value)" placeholder="Min" min="0" max="50" title="Minimum players">
             <button class="btn btn-delete" onclick="removeDay(${index})" title="Remove">×</button>
         `;
         container.appendChild(row);
     });
+
+    const addBtn = document.getElementById('addBtn');
+    if (smpStats.length >= MAX_DAYS) {
+        addBtn.disabled = true;
+        addBtn.style.opacity = '0.5';
+        addBtn.textContent = 'Max 50 days reached';
+    } else {
+        addBtn.disabled = false;
+        addBtn.style.opacity = '1';
+        addBtn.textContent = `+ Add Day (${smpStats.length}/${MAX_DAYS})`;
+    }
 }
 
 function updateStat(index, field, value) {
     if (field === 'day') {
         smpStats[index][field] = value;
     } else {
-        smpStats[index][field] = parseInt(value) || 0;
+        let num = parseInt(value) || 0;
+        if (num > 50) num = 50;
+        if (num < 0) num = 0;
+        smpStats[index][field] = num;
     }
     updateChart();
     updateSummary();
+    renderConfig();
 }
 
 function addDay() {
+    if (smpStats.length >= MAX_DAYS) return;
     const nextDay = smpStats.length + 1;
     smpStats.push({ day: `Day ${nextDay}`, peak: 0, avg: 0, min: 0 });
     renderConfig();
     updateChart();
     updateSummary();
-    
-    // Scroll to bottom of config panel
+
     setTimeout(() => {
-        const panel = document.querySelector('.panel');
-        panel.scrollTop = panel.scrollHeight;
+        const scrollBox = document.querySelector('.config-scroll');
+        scrollBox.scrollTop = scrollBox.scrollHeight;
     }, 50);
 }
 
@@ -376,22 +538,177 @@ function updateChart() {
     chart.data.datasets[0].data = smpStats.map(s => s.peak);
     chart.data.datasets[1].data = smpStats.map(s => s.avg);
     chart.data.datasets[2].data = smpStats.map(s => s.min);
+
+    chart.data.datasets.forEach((ds, i) => {
+        ds.hidden = !visibleDatasets[i];
+    });
+
     chart.update();
+    drawSparklines();
 }
 
 function updateSummary() {
     const maxPeak = Math.max(...smpStats.map(s => s.peak));
-    const avgAll = Math.round(smpStats.reduce((a, b) => a + b.avg, 0) / smpStats.length);
-    
+    const avgAll = Math.round(smpStats.reduce((a, b) => a + b.avg, 0) / smpStats.length) || 0;
+    const totalHours = smpStats.reduce((a, b) => a + b.avg, 0) * 12;
+
     document.getElementById('totalPeak').textContent = maxPeak;
     document.getElementById('totalAvg').textContent = avgAll;
     document.getElementById('totalDays').textContent = smpStats.length;
+    document.getElementById('totalPlayers').textContent = totalHours.toLocaleString();
+
+    // Trend
+    if (smpStats.length >= 2) {
+        const last = smpStats[smpStats.length - 1];
+        const prev = smpStats[smpStats.length - 2];
+        const diff = last.peak - prev.peak;
+        const trendEl = document.getElementById('trendDay');
+        const trendText = document.getElementById('trendText');
+
+        if (diff > 0) {
+            trendEl.innerHTML = `<span class="trend-up">▲ ${diff}</span>`;
+            trendText.innerHTML = '<span class="trend-up">Up from yesterday</span>';
+        } else if (diff < 0) {
+            trendEl.innerHTML = `<span class="trend-down">▼ ${Math.abs(diff)}</span>`;
+            trendText.innerHTML = '<span class="trend-down">Down from yesterday</span>';
+        } else {
+            trendEl.innerHTML = `<span style="color:#94a3b8;">— 0</span>`;
+            trendText.innerHTML = '<span style="color:#94a3b8;">No change</span>';
+        }
+    }
+}
+
+function setChartType(type) {
+    currentChartType = type;
+    document.querySelectorAll('.chart-toggle .toggle-btn').forEach((btn, i) => {
+        if (i < 3) btn.classList.remove('active');
+    });
+    document.querySelectorAll('.chart-toggle .toggle-btn')[type === 'bar' ? 0 : type === 'line' ? 1 : 2].classList.add('active');
+
+    if (type === 'mixed') {
+        chart.config.type = 'bar';
+        chart.data.datasets[0].type = 'line';
+        chart.data.datasets[0].fill = false;
+        chart.data.datasets[0].tension = 0.4;
+        chart.data.datasets[0].pointRadius = 4;
+        chart.data.datasets[0].pointBackgroundColor = '#22c55e';
+        chart.data.datasets[1].type = 'bar';
+        chart.data.datasets[2].type = 'bar';
+    } else if (type === 'line') {
+        chart.config.type = 'line';
+        chart.data.datasets.forEach(ds => {
+            ds.type = 'line';
+            ds.fill = false;
+            ds.tension = 0.4;
+            ds.pointRadius = 4;
+            ds.pointBackgroundColor = ds.borderColor;
+        });
+    } else {
+        chart.config.type = 'bar';
+        chart.data.datasets.forEach(ds => {
+            ds.type = 'bar';
+            delete ds.fill;
+            delete ds.tension;
+            delete ds.pointRadius;
+            delete ds.pointBackgroundColor;
+        });
+    }
+    chart.update();
+}
+
+function toggleDataset(index) {
+    visibleDatasets[index] = !visibleDatasets[index];
+    const btns = document.querySelectorAll('.chart-toggle .toggle-btn');
+    const colorMap = ['#22c55e', '#3b82f6', '#64748b'];
+    if (visibleDatasets[index]) {
+        btns[index + 3].classList.add('active');
+        btns[index + 3].style.borderColor = colorMap[index];
+        btns[index + 3].style.color = colorMap[index];
+    } else {
+        btns[index + 3].classList.remove('active');
+        btns[index + 3].style.borderColor = '#334155';
+        btns[index + 3].style.color = '#64748b';
+    }
+    updateChart();
+}
+
+function drawSparklines() {
+    drawSparkline('sparkPeak', smpStats.map(s => s.peak), '#22c55e');
+    drawSparkline('sparkAvg', smpStats.map(s => s.avg), '#3b82f6');
+}
+
+function drawSparkline(canvasId, data, color) {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas || data.length < 2) return;
+    const ctx = canvas.getContext('2d');
+    const w = canvas.width = canvas.offsetWidth;
+    const h = canvas.height = canvas.offsetHeight;
+
+    ctx.clearRect(0, 0, w, h);
+    const max = Math.max(...data, 1);
+    const min = Math.min(...data);
+    const range = max - min || 1;
+
+    ctx.beginPath();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+
+    data.forEach((val, i) => {
+        const x = (i / (data.length - 1)) * w;
+        const y = h - ((val - min) / range) * (h - 4) - 2;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+
+    // Fill area
+    ctx.lineTo(w, h);
+    ctx.lineTo(0, h);
+    ctx.closePath();
+    ctx.fillStyle = color + '20';
+    ctx.fill();
+}
+
+function exportData() {
+    const blob = new Blob([JSON.stringify(smpStats, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'lightcity-smp-stats.json';
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+function importData(input) {
+    const file = input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const data = JSON.parse(e.target.result);
+            if (Array.isArray(data) && data.length <= MAX_DAYS) {
+                smpStats = data;
+                renderConfig();
+                updateChart();
+                updateSummary();
+            } else {
+                alert('Invalid file or exceeds 50 days limit');
+            }
+        } catch (err) {
+            alert('Failed to parse JSON');
+        }
+    };
+    reader.readAsText(file);
+    input.value = '';
 }
 
 initChart();
 renderConfig();
 updateChart();
 updateSummary();
+drawSparklines();
+
+window.addEventListener('resize', drawSparklines);
 </script>
 </body>
 </html>
