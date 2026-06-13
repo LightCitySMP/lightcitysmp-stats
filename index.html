@@ -349,15 +349,15 @@ h1 {
 
 <script>
 let smpStats = [
-    { day: "Day 1", peak: 25, avg: 15, min: 3 }
-    { day: "Day 2", peak: 26, avg: 14, min: 4 }
-    { day: "Day 3", peak: 29, avg: 18, min: 5 }
-    { day: "Day 4", peak: 25, avg: 15, min: 2 }
+    { day: "Day 1", peak: 25, avg: 15, min: 3 },
+    { day: "Day 2", peak: 26, avg: 14, min: 4 },
+    { day: "Day 3", peak: 29, avg: 18, min: 5 },
+    { day: "Day 4", peak: 25, avg: 15, min: 2 },
     { day: "Day 5", peak: 26, avg: 13, min: 3 },
-    { day: "Day 5", peak: 28, avg: 15, min: 1 }
+    { day: "Day 6", peak: 28, avg: 15, min: 1 }
 ];
 
-const MAX_DAYS = 50;
+const MAX_DAYS = 30;
 let chart;
 let currentChartType = 'bar';
 let visibleDatasets = [true, true, true];
@@ -555,7 +555,6 @@ function updateSummary() {
     document.getElementById('totalDays').textContent = smpStats.length;
     document.getElementById('totalPlayers').textContent = totalHours.toLocaleString();
 
-    // Trend
     if (smpStats.length >= 2) {
         const last = smpStats[smpStats.length - 1];
         const prev = smpStats[smpStats.length - 2];
@@ -659,7 +658,6 @@ function drawSparkline(canvasId, data, color) {
     });
     ctx.stroke();
 
-    // Fill area
     ctx.lineTo(w, h);
     ctx.lineTo(0, h);
     ctx.closePath();
